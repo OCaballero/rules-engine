@@ -1,0 +1,18 @@
+
+
+Para utilizar el template, hay que recordar que la columna del excel empieza por 1 mientras que la fila en 0
+
+DTABLE /tmp/template1.xls /tmp/template.template 0 1  
+
+
+Si utilizamos el DRL, solo lo tendremos que poner a el.
+
+Mientras que si utilizamos un DSLR, ira acompañado de un DSL definiendo las reglas
+
+java -Dspark.master=local[2] -cp alternateLocation/*;spark-drools-0.0.1-SNAPSHOT.jar com.oliver.spark_drools.App config
+
+
+
+
+
+

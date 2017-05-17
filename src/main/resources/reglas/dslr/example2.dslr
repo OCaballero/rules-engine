@@ -1,0 +1,10 @@
+package com.oliver.spark_drools.bo
+
+expander definiciones.dsl
+
+rule "Example2 DSLR"
+	when		
+         Tengo un mensaje con id >5
+    then 
+		Escribir "ejemplo con id mayor que 5"
+end

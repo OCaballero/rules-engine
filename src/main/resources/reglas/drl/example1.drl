@@ -1,0 +1,9 @@
+package com.oliver.spark_drools.bo
+
+dialect "java"
+rule "Rule example1 DRL"
+	when		
+        item : Message()
+    then 
+		item.addOutput("columna 1", 5); 
+end

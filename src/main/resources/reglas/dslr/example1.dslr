@@ -1,0 +1,11 @@
+package com.oliver.spark_drools.bo
+
+expander definiciones.dsl
+
+rule "Example1 DSLR"
+
+	when		
+        Viene un mensaje
+    then 
+		Escribir "hola que tal"
+end

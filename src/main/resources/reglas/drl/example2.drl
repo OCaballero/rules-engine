@@ -1,0 +1,9 @@
+package com.oliver.spark_drools.bo
+
+dialect "java"
+rule "Rule example2 DRL"
+	when		
+        item : Message(numMessage==1)
+    then 
+		item.addOutput("columna2", "Este tiene el número de mensaje 1"); 
+end
