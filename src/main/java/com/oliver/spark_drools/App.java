@@ -72,7 +72,7 @@ public class App {
 
 						List<Message> myList = Lists.newArrayList(iterator);
 						
-						DroolsUtils.fireStatelessRules(myList,config);
+						DroolsUtils.fireRules(myList,config);
 
 						for (Message outputMessage : myList) {
 							log.info(outputMessage.getOutput());

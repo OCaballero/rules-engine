@@ -8,6 +8,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -16,10 +17,12 @@ import org.drools.decisiontable.InputType;
 import org.drools.decisiontable.SpreadsheetCompiler;
 import org.kie.api.KieBase;
 import org.kie.api.command.Command;
+import org.kie.api.definition.process.Process;
 import org.kie.api.io.Resource;
 import org.kie.api.io.ResourceType;
 import org.kie.api.runtime.KieSession;
 import org.kie.api.runtime.StatelessKieSession;
+import org.kie.api.runtime.process.ProcessInstance;
 import org.kie.internal.builder.DecisionTableConfiguration;
 import org.kie.internal.builder.KnowledgeBuilder;
 import org.kie.internal.builder.KnowledgeBuilderFactory;
@@ -78,11 +81,17 @@ public class DroolsUtils {
 			return;
 		}
 
-		KieBase session = knowledgeBuilder.newKnowledgeBase();
-		kieStatelessSession = session.newStatelessKieSession();
-		kieSession = session.newKieSession();
+		KieBase kieBase = knowledgeBuilder.newKnowledgeBase();
+		kieStatelessSession = kieBase.newStatelessKieSession();
+		kieSession = kieBase.newKieSession();
 
 		version = newRules.getVersion();
+
+		List<String> idProcesses = new ArrayList<String>();
+		for (Process process : kieBase.getProcesses()) {
+			kieSession.startProcess(process.getId());
+			kieStatelessSession.execute(CommandFactory.newStartProcess(process.getId()));
+		}
 
 	}
 
@@ -132,7 +141,6 @@ public class DroolsUtils {
 
 		} catch (FileNotFoundException e) {
 			log.error("Archivo de configuracion no encontrado", e);
-			return;
 		} catch (Exception e) {
 			log.error(e);
 		} finally {
@@ -155,8 +163,12 @@ public class DroolsUtils {
 			for (Message droolsMessage : myList) {
 				kieSession.insert(droolsMessage);
 			}
-			kieSession.fireAllRules();
-			// wait???
+
+			if (kieSession.getProcessInstances().size() == 0) {
+				kieSession.fireAllRules();
+				// wait???
+			}
+
 		}
 
 	}
