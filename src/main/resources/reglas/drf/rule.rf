@@ -2,22 +2,28 @@
 <process xmlns="http://drools.org/drools-5.0/process"
          xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
          xs:schemaLocation="http://drools.org/drools-5.0/process drools-processes-5.0.xsd"
-         type="RuleFlow" name="flow" >
+         type="RuleFlow" name="flowName" id="org.drools.event" package-name="org.drools" version="version1">
 
   <header>
   </header>
 
   <nodes>
    	<start id="1" name="Start" />
-    <actionNode id="3" name="Action 1" >
+    <actionNode id="2" name="Action 1" >
         <action type="expression" dialect="mvel">System.out.println("Inside Action 1")</action>
     </actionNode>
-    <end id="3" name="End" />
+    <actionNode id="3" name="Action 2" >
+        <action type="expression" dialect="mvel">System.out.println("Inside Action 2")</action>
+    </actionNode>
+    <end id="4" name="End" />
+
   </nodes>
+
 
   <connections>
     <connection from="1" to="2" />
     <connection from="2" to="3" />
+    <connection from="3" to="4" />
   </connections>
 
 </process>

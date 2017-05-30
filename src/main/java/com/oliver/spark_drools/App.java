@@ -72,7 +72,7 @@ public class App {
 
 						List<Message> myList = Lists.newArrayList(iterator);
 						
-						DroolsUtils.fireRules(myList,config);
+						DroolsUtils.startDrools(myList,config,true);
 
 						for (Message outputMessage : myList) {
 							log.info(outputMessage.getOutput());

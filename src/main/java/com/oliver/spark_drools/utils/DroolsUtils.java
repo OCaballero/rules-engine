@@ -2,13 +2,11 @@ package com.oliver.spark_drools.utils;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -20,9 +18,7 @@ import org.kie.api.command.Command;
 import org.kie.api.definition.process.Process;
 import org.kie.api.io.Resource;
 import org.kie.api.io.ResourceType;
-import org.kie.api.runtime.KieSession;
-import org.kie.api.runtime.StatelessKieSession;
-import org.kie.api.runtime.process.ProcessInstance;
+import org.kie.api.runtime.CommandExecutor;
 import org.kie.internal.builder.DecisionTableConfiguration;
 import org.kie.internal.builder.KnowledgeBuilder;
 import org.kie.internal.builder.KnowledgeBuilderFactory;
@@ -33,13 +29,13 @@ import com.oliver.spark_drools.bo.Message;
 
 public class DroolsUtils {
 
-	private static KieSession kieSession;
+	private static KieBase kieBase;
 
-	private static StatelessKieSession kieStatelessSession;
+	private static CommandExecutor session;
 	private static int version = 0;
 	private static Logger log = Logger.getLogger(DroolsUtils.class);
 
-	public static void chargeRules(ListRules newRules) throws IOException {
+	public static KieBase chargeRules(ListRules newRules) throws IOException {
 
 		KnowledgeBuilder knowledgeBuilder = KnowledgeBuilderFactory.newKnowledgeBuilder();
 
@@ -78,20 +74,12 @@ public class DroolsUtils {
 
 		if (knowledgeBuilder.hasErrors()) {
 			log.error(knowledgeBuilder.getErrors().toString());
-			return;
+			return null;
 		}
 
 		KieBase kieBase = knowledgeBuilder.newKnowledgeBase();
-		kieStatelessSession = kieBase.newStatelessKieSession();
-		kieSession = kieBase.newKieSession();
 
-		version = newRules.getVersion();
-
-		List<String> idProcesses = new ArrayList<String>();
-		for (Process process : kieBase.getProcesses()) {
-			kieSession.startProcess(process.getId());
-			kieStatelessSession.execute(CommandFactory.newStartProcess(process.getId()));
-		}
+		return kieBase;
 
 	}
 
@@ -104,7 +92,7 @@ public class DroolsUtils {
 	}
 
 	// cambiar por llamada a HBASE
-	public static void updateRules(String pathConfig) {
+	public static KieBase updateRules(String pathConfig) {
 		BufferedReader br = null;
 		try {
 			File archivo = new File(pathConfig);
@@ -112,8 +100,8 @@ public class DroolsUtils {
 			br = new BufferedReader(fr);
 
 			String linea = br.readLine();
-			int version = Integer.parseInt(linea);
-			if (DroolsUtils.getVersion() < version) {
+			int newVersion = Integer.parseInt(linea);
+			if (DroolsUtils.getVersion() < newVersion) {
 				List<DroolsRule> list = new ArrayList<DroolsRule>();
 				while ((linea = br.readLine()) != null) {
 
@@ -135,12 +123,16 @@ public class DroolsUtils {
 					list.add(rule);
 
 				}
-				chargeRules(new ListRules(list, version));
+				KieBase kie = chargeRules(new ListRules(list, newVersion));
+				if (kie != null) {
+					version = newVersion;
+					return kie;
+				}
 			}
 			br.close();
 
 		} catch (FileNotFoundException e) {
-			log.error("Archivo de configuracion no encontrado", e);
+			log.error("Archivo de configuracion no encontrado ",e);
 		} catch (Exception e) {
 			log.error(e);
 		} finally {
@@ -153,36 +145,34 @@ public class DroolsUtils {
 			}
 		}
 
+		return null;
+
 	}
 
-	public static void fireRules(List<Message> myList, String config) {
+	public static void startDrools(List<Message> myList, String config, boolean statefull) {
 
-		DroolsUtils.updateRules(config);
+		KieBase newKieBase = DroolsUtils.updateRules(config);
 
-		if (kieSession != null) {
-			for (Message droolsMessage : myList) {
-				kieSession.insert(droolsMessage);
+		if (newKieBase != null) {
+			kieBase = newKieBase;
+			if (statefull) {
+				session = kieBase.newKieSession();
+			} else {
+				session = kieBase.newStatelessKieSession();
 			}
 
-			if (kieSession.getProcessInstances().size() == 0) {
-				kieSession.fireAllRules();
-				// wait???
-			}
+			for (Process process : kieBase.getProcesses()) {
+				session.execute(CommandFactory.newStartProcess(process.getId()));
 
+			}
 		}
-
-	}
-
-	public static void fireStatelessRules(List<Message> myList, String config) {
-
-		DroolsUtils.updateRules(config);
-
-		if (kieStatelessSession != null) {
+		if (session != null) {
 			List<Command<Message>> cmds = new ArrayList<Command<Message>>();
 			for (Message droolsMessage : myList) {
 				cmds.add(CommandFactory.newInsert(droolsMessage));
 			}
-			kieStatelessSession.execute(CommandFactory.newBatchExecution(cmds));
+			cmds.add(CommandFactory.newFireAllRules());
+			session.execute(CommandFactory.newBatchExecution(cmds));
 		}
 
 	}
