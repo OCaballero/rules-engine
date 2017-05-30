@@ -13,12 +13,26 @@ import org.apache.log4j.Logger;
 import org.drools.decisiontable.ExternalSpreadsheetCompiler;
 import org.drools.decisiontable.InputType;
 import org.drools.decisiontable.SpreadsheetCompiler;
+import org.jbpm.workflow.core.WorkflowProcess;
+import org.jbpm.workflow.core.impl.WorkflowProcessImpl;
+import org.jbpm.workflow.instance.WorkflowProcessInstanceUpgrader;
+import org.jbpm.workflow.instance.impl.WorkflowProcessInstanceImpl;
 import org.kie.api.KieBase;
 import org.kie.api.command.Command;
 import org.kie.api.definition.process.Process;
+import org.kie.api.event.process.ProcessCompletedEvent;
+import org.kie.api.event.process.ProcessEventListener;
+import org.kie.api.event.process.ProcessEventManager;
+import org.kie.api.event.process.ProcessNodeLeftEvent;
+import org.kie.api.event.process.ProcessNodeTriggeredEvent;
+import org.kie.api.event.process.ProcessStartedEvent;
+import org.kie.api.event.process.ProcessVariableChangedEvent;
+import org.kie.api.event.rule.RuleRuntimeEventManager;
 import org.kie.api.io.Resource;
 import org.kie.api.io.ResourceType;
 import org.kie.api.runtime.CommandExecutor;
+import org.kie.api.runtime.KieSession;
+import org.kie.api.runtime.StatelessKieSession;
 import org.kie.internal.builder.DecisionTableConfiguration;
 import org.kie.internal.builder.KnowledgeBuilder;
 import org.kie.internal.builder.KnowledgeBuilderFactory;
@@ -132,7 +146,7 @@ public class DroolsUtils {
 			br.close();
 
 		} catch (FileNotFoundException e) {
-			log.error("Archivo de configuracion no encontrado ",e);
+			log.error("Archivo de configuracion no encontrado ", e);
 		} catch (Exception e) {
 			log.error(e);
 		} finally {
@@ -149,8 +163,7 @@ public class DroolsUtils {
 
 	}
 
-	public static void startDrools(List<Message> myList, String config, boolean statefull) {
-
+	private static void loadRules(String config,boolean statefull, boolean listeners) {
 		KieBase newKieBase = DroolsUtils.updateRules(config);
 
 		if (newKieBase != null) {
@@ -161,17 +174,41 @@ public class DroolsUtils {
 				session = kieBase.newStatelessKieSession();
 			}
 
+			if (session instanceof ProcessEventManager && listeners) {
+				((ProcessEventManager) session).addEventListener(new DroolsProcessEventListener());
+			}
+
+			if (session instanceof RuleRuntimeEventManager && listeners) {
+				((RuleRuntimeEventManager) session).addEventListener(new DroolsRuleEventListener());
+			}
+
 			for (Process process : kieBase.getProcesses()) {
 				session.execute(CommandFactory.newStartProcess(process.getId()));
 
 			}
+
 		}
+	}
+
+	public static void startDrools(List<Message> myList, String config, boolean statefull) {
+		loadRules(config,statefull, false);
+
 		if (session != null) {
+
 			List<Command<Message>> cmds = new ArrayList<Command<Message>>();
+
 			for (Message droolsMessage : myList) {
 				cmds.add(CommandFactory.newInsert(droolsMessage));
 			}
-			cmds.add(CommandFactory.newFireAllRules());
+
+			if (kieBase.getProcesses().size() != 0) {
+				for (Process process : kieBase.getProcesses()) {
+					cmds.add(CommandFactory.newStartProcess(process.getId()));
+				}
+			} else {
+				cmds.add(CommandFactory.newFireAllRules());
+			}
+
 			session.execute(CommandFactory.newBatchExecution(cmds));
 		}
 

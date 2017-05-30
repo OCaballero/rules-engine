@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<process xmlns="http://drools.org/drools-5.0/process"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
+         xs:schemaLocation="http://drools.org/drools-5.0/process drools-processes-5.0.xsd"
+         type="RuleFlow" name="flow" id="org.drools.event" package-name="org.drools" version="version1">
+
+  <header>
+  </header>
+
+  <nodes>
+    <start id="1" name="Start" x="86" y="155" width="48" height="48" />
+    <end id="2" name="End" x="767" y="315" width="48" height="48" />
+    <ruleSet id="3" name="Regla 1" x="231" y="176" width="80" height="48" ruleFlowGroup="group1" />
+    <actionNode id="4" name="Action 1" x="437" y="208" width="80" height="48" >
+        <action type="expression" dialect="mvel" >System.out.println("Inside Action 1")</action>
+    </actionNode>
+    <ruleSet id="5" name="Regla 2" x="44" y="334" width="80" height="48" ruleFlowGroup="group2" />
+    <actionNode id="6" name="Action 2" x="454" y="507" width="80" height="48" >
+        <action type="expression" dialect="mvel" >System.out.println("Inside Action 2")</action>
+    </actionNode>
+  </nodes>
+
+  <connections>
+    <connection from="6" to="2" />
+    <connection from="1" to="3" />
+    <connection from="3" to="4" />
+    <connection from="4" to="5" />
+    <connection from="5" to="6" />
+  </connections>
+
+</process>
