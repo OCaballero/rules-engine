@@ -87,8 +87,8 @@ public class DroolsUtils {
 		return version;
 	}
 
-	public static void setVersion(int version) {
-		DroolsUtils.version = version;
+	public static void setVersion(int version_) {
+		version = version_;
 	}
 
 	// cambiar por llamada a HBASE

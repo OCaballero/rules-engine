@@ -1,0 +1,17 @@
+template header
+condition
+column
+text
+
+package com.oliver.spark_drools.bo
+
+template "xls"
+
+rule "XLS_NUMBER_@{row.rowNumber}"
+when
+    item:Message(@{condition})
+then
+   item.addOutput("@{column}","@{text}");
+end
+
+end template
