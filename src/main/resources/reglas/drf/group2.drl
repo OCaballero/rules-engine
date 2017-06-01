@@ -4,7 +4,7 @@ dialect "java"
 rule "Rule example2 DRL"
 ruleflow-group "group2"
 	when		
-        item : Message(numMessage==1)
+        item : Message()
     then 
-		item.addOutput("columna2", "Este tiene el número de mensaje 1"); 
+		item.addOutput("columna 2", "pasa por el grupo 2"); 
 end
