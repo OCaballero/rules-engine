@@ -122,7 +122,7 @@ public class DroolsUtils {
 					String[] words = linea.split(" ");
 
 					if (words.length < 2) {
-						throw new RuntimeException("No tiene dos variables");
+						throw new RuntimeException("No tiene dos variables: " + linea);
 					}
 
 					DroolsRule rule = new DroolsRule();

@@ -3,7 +3,6 @@ package com.oliver.spark_drools;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -58,7 +57,7 @@ public class App {
 			queue.add(rdd);
 		}
 
-		JavaStreamingContext jssc = new JavaStreamingContext(jsc, new Duration(1000));
+		JavaStreamingContext jssc = new JavaStreamingContext(jsc, new Duration(2000));
 
 		JavaDStream<Message> stream = jssc.queueStream(queue);
 
@@ -66,16 +65,16 @@ public class App {
 
 			public void call(final JavaRDD<Message> rdd) throws Exception {
 
-				rdd.foreachPartition(new VoidFunction<Iterator<Message>>() {
+				rdd.foreach(new VoidFunction<Message>() {
 
-					public void call(Iterator<Message> iterator) throws Exception {
+					public void call(Message iterator) throws Exception {
 
 						List<Message> myList = Lists.newArrayList(iterator);
 						
-						DroolsUtils.startDrools(myList,config,true);
+						DroolsUtils.startDrools(myList,config,false);
 
 						for (Message outputMessage : myList) {
-							log.info(outputMessage.getOutput());
+							log.info(outputMessage.getNumMessage() + " " + outputMessage.getOutput());
 						}
 
 					}
