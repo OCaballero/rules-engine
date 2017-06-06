@@ -67,15 +67,11 @@ public class App {
 
 				rdd.foreach(new VoidFunction<Message>() {
 
-					public void call(Message iterator) throws Exception {
+					public void call(Message outputMessage) throws Exception {
 
-						List<Message> myList = Lists.newArrayList(iterator);
-						
-						DroolsUtils.startDrools(myList,config,false);
+						DroolsUtils.startDrools(outputMessage, config, false);
 
-						for (Message outputMessage : myList) {
-							log.info(outputMessage.getNumMessage() + " " + outputMessage.getOutput());
-						}
+						log.info(outputMessage.getNumMessage() + " " + outputMessage.getOutput());
 
 					}
 

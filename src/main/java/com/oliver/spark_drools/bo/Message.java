@@ -65,4 +65,10 @@ public class Message implements Serializable {
 		this.numMessage = numMessage;
 	}
 
+	@Override
+	public String toString() {
+		return "Message [id=" + id + ", numMessage=" + numMessage + ", input=" + input + ", output=" + output + "]";
+	}
+
+	
 }

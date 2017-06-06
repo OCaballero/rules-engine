@@ -7,32 +7,21 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.drools.decisiontable.ExternalSpreadsheetCompiler;
 import org.drools.decisiontable.InputType;
 import org.drools.decisiontable.SpreadsheetCompiler;
-import org.jbpm.workflow.core.WorkflowProcess;
-import org.jbpm.workflow.core.impl.WorkflowProcessImpl;
-import org.jbpm.workflow.instance.WorkflowProcessInstanceUpgrader;
-import org.jbpm.workflow.instance.impl.WorkflowProcessInstanceImpl;
 import org.kie.api.KieBase;
 import org.kie.api.command.Command;
 import org.kie.api.definition.process.Process;
-import org.kie.api.event.process.ProcessCompletedEvent;
-import org.kie.api.event.process.ProcessEventListener;
 import org.kie.api.event.process.ProcessEventManager;
-import org.kie.api.event.process.ProcessNodeLeftEvent;
-import org.kie.api.event.process.ProcessNodeTriggeredEvent;
-import org.kie.api.event.process.ProcessStartedEvent;
-import org.kie.api.event.process.ProcessVariableChangedEvent;
 import org.kie.api.event.rule.RuleRuntimeEventManager;
 import org.kie.api.io.Resource;
 import org.kie.api.io.ResourceType;
 import org.kie.api.runtime.CommandExecutor;
-import org.kie.api.runtime.KieSession;
-import org.kie.api.runtime.StatelessKieSession;
 import org.kie.internal.builder.DecisionTableConfiguration;
 import org.kie.internal.builder.KnowledgeBuilder;
 import org.kie.internal.builder.KnowledgeBuilderFactory;
@@ -163,7 +152,7 @@ public class DroolsUtils {
 
 	}
 
-	private static void loadRules(String config,boolean statefull, boolean listeners) {
+	private static void loadRules(String config, boolean statefull, boolean listeners) {
 		KieBase newKieBase = DroolsUtils.updateRules(config);
 
 		if (newKieBase != null) {
@@ -190,20 +179,18 @@ public class DroolsUtils {
 		}
 	}
 
-	public static void startDrools(List<Message> myList, String config, boolean statefull) {
-		loadRules(config,statefull, false);
+	public static void startDrools(Message message, String config, boolean statefull) {
+		loadRules(config, statefull, false);
 
 		if (session != null) {
 
 			List<Command<Message>> cmds = new ArrayList<Command<Message>>();
-
-			for (Message droolsMessage : myList) {
-				cmds.add(CommandFactory.newInsert(droolsMessage));
-			}
-
+			cmds.add(CommandFactory.newInsert(message));
 			if (kieBase.getProcesses().size() != 0) {
+				HashMap param = new HashMap<String, Object>();
+				param.put("message", message);
 				for (Process process : kieBase.getProcesses()) {
-					cmds.add(CommandFactory.newStartProcess(process.getId()));
+					cmds.add(CommandFactory.newStartProcess(process.getId(), param));
 				}
 			} else {
 				cmds.add(CommandFactory.newFireAllRules());
