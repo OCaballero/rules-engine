@@ -18,16 +18,19 @@
         <constraint toNodeId="5" toType="DROOLS_DEFAULT" name="split2" priority="2" type="code" dialect="java" >System.out.println("pasa por code 2");return true;</constraint>
       <constraint toNodeId="4" toType="DROOLS_DEFAULT" name="split1" priority="1" type="code" dialect="java" >
 	  Message mg = (Message)kcontext.getVariable("message");
-	  System.out.println(mg);
+	  
 	  if(mg == null){
+		System.out.println("Message null");
 		return false;
 	  
 	  }
 	  int num = mg.getNumMessage();
 	  
 	  if(num > 2){
+	    System.out.println("Message mayor que dos " + num);
 		return false;
 	  }else{
+	    System.out.println("Message menor que dos " + num);
 		return true;
 	  }
 	 
@@ -36,13 +39,13 @@
     </split>
     <join id="3" name="JOIN" x="704" y="243" width="49" height="49" type="2" />
     <actionNode id="4" name="Script2" x="221" y="268" width="80" height="48" >
-        <action type="expression" dialect="mvel" >System.out.println("Se ha iniciado script2");</action>
+        <action type="expression" dialect="mvel" >System.out.println("Se ha iniciado script1");</action>
     </actionNode>
     <actionNode id="5" name="Script1" x="231" y="37" width="80" height="48" >
-        <action type="expression" dialect="java" >System.out.println("Se ha iniciado script1");</action>
+        <action type="expression" dialect="java" >System.out.println("Se ha iniciado script2");</action>
     </actionNode>
-    <ruleSet id="6" name="Rule1" x="480" y="76" width="80" height="48" ruleFlowGroup="group1" />
-    <ruleSet id="7" name="Rule2" x="455" y="329" width="80" height="48" ruleFlowGroup="group2" />
+    <ruleSet id="6" name="Rule1" x="480" y="76" width="80" height="48" ruleFlowGroup="group2" />
+    <ruleSet id="7" name="Rule2" x="455" y="329" width="80" height="48" ruleFlowGroup="group1" />
     <end id="8" name="End" x="953" y="299" width="48" height="48" />
   </nodes>
 

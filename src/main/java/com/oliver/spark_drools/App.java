@@ -2,7 +2,9 @@ package com.oliver.spark_drools;
 
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -53,7 +55,7 @@ public class App {
 
 				list.add(new Message("Message " + j + " del batch " + i, j, input));
 			}
-			JavaRDD<Message> rdd = jsc.parallelize(list);
+			JavaRDD<Message> rdd = jsc.parallelize(list,1);
 			queue.add(rdd);
 		}
 
@@ -65,13 +67,18 @@ public class App {
 
 			public void call(final JavaRDD<Message> rdd) throws Exception {
 
-				rdd.foreach(new VoidFunction<Message>() {
+				rdd.foreachPartition(new VoidFunction<Iterator<Message>>() {
 
-					public void call(Message outputMessage) throws Exception {
+					public void call(Iterator<Message> iterator) throws Exception {
+						
+						List<Message> myList = Lists.newArrayList(iterator);
 
-						DroolsUtils.startDrools(outputMessage, config, false);
+						DroolsUtils.startDrools(myList, config, false);
 
-						log.info(outputMessage.getNumMessage() + " " + outputMessage.getOutput());
+						for (Message outputMessage : myList) {
+							log.info(outputMessage.getNumMessage() + " " + outputMessage.getOutput());
+						}
+
 
 					}
 

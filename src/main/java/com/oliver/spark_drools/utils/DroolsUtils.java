@@ -171,32 +171,34 @@ public class DroolsUtils {
 				((RuleRuntimeEventManager) session).addEventListener(new DroolsRuleEventListener());
 			}
 
-			for (Process process : kieBase.getProcesses()) {
-				session.execute(CommandFactory.newStartProcess(process.getId()));
-
-			}
-
 		}
 	}
 
-	public static void startDrools(Message message, String config, boolean statefull) {
+	public static void startDrools(List<Message> list, String config, boolean statefull) {
 		loadRules(config, statefull, false);
 
 		if (session != null) {
 
-			List<Command<Message>> cmds = new ArrayList<Command<Message>>();
-			cmds.add(CommandFactory.newInsert(message));
 			if (kieBase.getProcesses().size() != 0) {
-				HashMap param = new HashMap<String, Object>();
-				param.put("message", message);
-				for (Process process : kieBase.getProcesses()) {
-					cmds.add(CommandFactory.newStartProcess(process.getId(), param));
+
+				for (Message message : list) {
+					List<Command<Message>> cmds = new ArrayList<Command<Message>>();
+					cmds.add(CommandFactory.newInsert(message));
+					HashMap param = new HashMap<String, Object>();
+					param.put("message", message);
+					for (Process process : kieBase.getProcesses()) {
+						cmds.add(CommandFactory.newStartProcess(process.getId(), param));
+					}
+					session.execute(CommandFactory.newBatchExecution(cmds));
 				}
 			} else {
+				List<Command<Message>> cmds = new ArrayList<Command<Message>>();
+				cmds.add(CommandFactory.newInsertElements(list));
 				cmds.add(CommandFactory.newFireAllRules());
+				session.execute(CommandFactory.newBatchExecution(cmds));
 			}
 
-			session.execute(CommandFactory.newBatchExecution(cmds));
+			
 		}
 
 	}
